@@ -134,14 +134,22 @@ def save_user(user_data):
 
 def add_food_log(user_id, food_name, calories, protein, carbs, fat, meal_type, log_date):
     """Add a food entry to the log."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO food_log (user_id, food_name, calories, protein, carbs, fat, meal_type, log_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (user_id, food_name, calories, protein, carbs, fat, meal_type, log_date))
-    conn.commit()
-    conn.close()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO food_log (user_id, food_name, calories, protein, carbs, fat, meal_type, log_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, food_name, calories, protein, carbs, fat, meal_type, log_date))
+        conn.commit()
+        print(f"DEBUG: Food logged - {food_name}, {calories} kcal for user {user_id}")
+    except Exception as e:
+        print(f"ERROR in add_food_log: {e}")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 def add_activity_log(user_id, activity_type, duration_minutes, calories_burned, intensity, log_date):
     """Add an activity entry to the log."""

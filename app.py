@@ -299,57 +299,50 @@ elif menu == "🍎 Food Log":
     with tab1:
         st.subheader("Add Food Entry")
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            food_input = st.text_area("Describe what you ate", 
-                                     placeholder="Examples: 'ate 2 slices of pizza', '200g grilled chicken', 'banana'",
-                                     height=100)
-            
+        # Gunakan form agar submit bisa langsung memproses
+        with st.form(key="food_form"):
+            food_input = st.text_area(
+                "Describe what you ate",
+                placeholder="Examples: '2 slices of pizza', '200g chicken breast', 'banana', 'rice'",
+                height=100
+            )
             meal_type = st.selectbox("Meal Type", MEAL_TYPES)
+            submitted = st.form_submit_button("📝 Log Food")
             
-            if st.button("🔍 Analyze & Add"):
-                if food_input:
-                    parsed = parse_food_input(food_input)
-                    
-                    if parsed['detected']:
-                        st.success(f"✅ Detected: {parsed['food_name']} - {parsed['calories']:.0f} kcal")
-                        
-                        # Confirm and add
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            if st.button("✓ Confirm Entry"):
-                                add_food_log(
-                                    user['user_id'],
-                                    parsed['food_name'],
-                                    parsed['calories'],
-                                    parsed['protein'],
-                                    parsed['carbs'],
-                                    parsed['fat'],
-                                    meal_type,
-                                    date.today().isoformat()
-                                )
-                                st.success("✅ Food logged successfully!")
-                                st.rerun()
-                        with col2:
-                            if st.button("✏️ Edit Details"):
-                                st.session_state.edit_mode = True
-                    else:
-                        st.warning("⚠️ Could not detect food. Please specify food name.")
+            if submitted:
+                if not food_input.strip():
+                    st.error("Please enter a food description.")
                 else:
-                    st.error("Please enter food description")
-        
-        with col2:
-            st.info("💡 **Tips for better detection:**\n\n- Include quantity (e.g., '200g')\n- Specify food name\n- Examples:\n  • 'bowl of rice'\n  • '2 eggs'\n  • 'apple'")
+                    # Parsing input
+                    parsed = parse_food_input(food_input)
+                    if parsed['detected']:
+                        try:
+                            # Simpan ke database
+                            add_food_log(
+                                user['user_id'],
+                                parsed['food_name'],
+                                parsed['calories'],
+                                parsed['protein'],
+                                parsed['carbs'],
+                                parsed['fat'],
+                                meal_type,
+                                date.today().isoformat()
+                            )
+                            st.success(f"✅ {parsed['food_name']} ({parsed['calories']:.0f} kcal) logged successfully!")
+                            st.balloons()
+                            # Tunggu sebentar lalu refresh halaman agar history terlihat
+                            time.sleep(1)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to save: {str(e)}")
+                    else:
+                        st.warning("Could not detect food. Please specify a common food name (e.g., 'rice', 'chicken', 'apple').")
     
     with tab2:
         st.subheader("🍽️ Meal Suggestions")
-        
         today_in, _ = get_today_summary(user['user_id'])
         remaining = user['daily_target_calories'] - today_in
-        
         st.metric("Calories remaining today", f"{remaining:.0f} kcal")
-        
         if remaining > 0:
             recommendations = generate_meal_recommendation(remaining)
             for rec in recommendations:
@@ -361,15 +354,10 @@ elif menu == "🍎 Food Log":
     
     with tab3:
         st.subheader("📋 Food History")
-        
         food_logs = get_food_logs(user['user_id'], 30)
-        
-        if len(food_logs) > 0:
-            # Display summary
+        if not food_logs.empty:
             total_calories = food_logs['calories'].sum()
             st.metric("Total calories last 30 days", f"{total_calories:.0f} kcal")
-            
-            # Display table
             st.dataframe(
                 food_logs[['log_date', 'meal_type', 'food_name', 'calories', 'protein', 'carbs', 'fat']],
                 use_container_width=True,
