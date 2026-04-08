@@ -1,16 +1,27 @@
 import os
+import streamlit as st          # <--- BARU: import streamlit
 from dotenv import load_dotenv
 from groq import Groq
-from datetime import datetime
 
-load_dotenv()
+load_dotenv()  # tetap digunakan untuk localhost
 
 class FitnessChatbot:
     def __init__(self, user_data=None):
         self.user_data = user_data
-        self.conversation_history = []
         self.client = None
-        api_key = os.getenv('GROQ_API_KEY')
+        
+        # --- Mencari API Key dari berbagai sumber ---
+        api_key = None
+        
+        # 1. Coba dari environment variable (file .env atau sistem)
+        if os.getenv('GROQ_API_KEY'):
+            api_key = os.getenv('GROQ_API_KEY')
+        
+        # 2. Jika tidak ada, coba dari Streamlit Secrets (untuk cloud)
+        elif hasattr(st, 'secrets') and 'GROQ_API_KEY' in st.secrets:
+            api_key = st.secrets['GROQ_API_KEY']
+        
+        # 3. Jika ditemukan, inisialisasi client Groq
         if api_key:
             self.client = Groq(api_key=api_key)
 
