@@ -1,0 +1,19 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+data/*.db
+data/*.sqlite
+
+# Model files
+models/*.pkl
+
+# IDE
+.vscode/
+.idea/

@@ -542,42 +542,72 @@ elif menu == "🤖 AI Chatbot":
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        # Get context for today's summary
+        # Get today's context (always defined)
         calories_in, calories_out = get_today_summary(user['user_id'])
         context = {
             'calories_in': calories_in,
             'calories_out': calories_out
         }
         
+        # Get history (all messages except the current one)
+        history = st.session_state.messages[:-1]
+        
         # Get bot response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response = st.session_state.chatbot.get_response(prompt, context)
+                response = st.session_state.chatbot.get_response(
+                    user_message=prompt,
+                    context=context,
+                    history=history
+                )
                 st.markdown(response)
         
-        # Save to history
         st.session_state.messages.append({"role": "assistant", "content": response})
         save_chat_message(user['user_id'], prompt, response)
+        st.rerun()
     
-    # Quick suggestions
-    st.sidebar.markdown("### 💡 Quick Questions")
-    quick_questions = [
-        "How do I lose weight effectively?",
-        "Best foods for muscle gain?",
-        "How many calories should I eat?",
-        "Give me a home workout plan",
-        "How to stay motivated?"
-    ]
-    for q in quick_questions:
-        if st.sidebar.button(q, key=q):
-            st.session_state.messages.append({"role": "user", "content": q})
-            with st.chat_message("user"):
-                st.markdown(q)
-            response = st.session_state.chatbot.get_response(q, {})
-            with st.chat_message("assistant"):
-                st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+    # Quick questions sidebar - context must be defined inside each button click
+    with st.sidebar:
+        st.markdown("### 💡 Quick Questions")
+        st.markdown("Ask me anything:")
+        
+        quick_questions = [
+            "How do I lose weight effectively?",
+            "Best foods for muscle gain?",
+            "How many calories should I eat today?",
+            "Give me a home workout plan",
+            "How to stay motivated?",
+            "Tips for better sleep",
+            "What should I eat after workout?"
+        ]
+        
+        for q in quick_questions:
+            if st.button(q, key=f"quick_{q[:20]}"):
+                # Add user message
+                st.session_state.messages.append({"role": "user", "content": q})
+                with st.chat_message("user"):
+                    st.markdown(q)
+                
+                # Define context inside the button action (important!)
+                calories_in, calories_out = get_today_summary(user['user_id'])
+                context = {
+                    'calories_in': calories_in,
+                    'calories_out': calories_out
+                }
+                history = st.session_state.messages[:-1]
+                
+                with st.chat_message("assistant"):
+                    with st.spinner("Thinking..."):
+                        response = st.session_state.chatbot.get_response(
+                            user_message=q,
+                            context=context,
+                            history=history
+                        )
+                        st.markdown(response)
+                
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                save_chat_message(user['user_id'], q, response)
+                st.rerun()
 
 elif menu == "📊 ML Predictor":
     st.markdown('<div class="main-header">📊 ML Calorie Burn Predictor</div>', unsafe_allow_html=True)
