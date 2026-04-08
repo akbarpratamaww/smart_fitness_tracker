@@ -90,9 +90,16 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # Sidebar Navigation
-st.sidebar.image("https://img.icons8.com/color/96/000000/fitness-tracker.png", width=80)
-st.sidebar.title("💪 Smart Fitness Tracker")
-st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
+    <div style="text-align: center; padding: 10px 0;">
+        <img src="https://img.icons8.com/?size=100&id=Gfu2ShSgiWKq&format=png&color=000000" width="70">
+        <h2 style="margin-top: 10px; margin-bottom: 5px;"> Smart Fitness Tracker</h2>
+        <hr style="margin-top: 10px; margin-bottom: 10px;">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Navigation menu
 menu = st.sidebar.radio(
