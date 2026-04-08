@@ -151,18 +151,18 @@ if menu == "🏠 Dashboard":
                      delta=get_bmi_category(calculate_bmi(user['weight_kg'], user['height_cm'])))
         
         # Quick actions
-        st.markdown("---")
-        st.subheader("📝 Quick Actions")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("🍎 Quick Food Log", use_container_width=True):
-                st.switch_page("app.py")  # Navigate to food log
-        with col2:
-            if st.button("🏃 Quick Activity Log", use_container_width=True):
-                st.switch_page("app.py")
-        with col3:
-            if st.button("🤖 Ask AI Coach", use_container_width=True):
-                st.switch_page("app.py")
+        # st.markdown("---")
+        # st.subheader("📝 Quick Actions")
+        # col1, col2, col3 = st.columns(3)
+        # with col1:
+        #     if st.button("🍎 Quick Food Log", use_container_width=True):
+        #         st.switch_page("app.py")  # Navigate to food log
+        # with col2:
+        #     if st.button("🏃 Quick Activity Log", use_container_width=True):
+        #         st.switch_page("app.py")
+        # with col3:
+        #     if st.button("🤖 Ask AI Coach", use_container_width=True):
+        #         st.switch_page("app.py")
         
         # Weekly calorie chart
         st.markdown("---")
