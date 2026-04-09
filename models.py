@@ -41,11 +41,11 @@ def train_calorie_prediction_model():
     y = df['Calories']
     
     # Encode Sex
-    if X['Sex'].dtype == 'object':
-        sex_map = {'male': 1, 'female': 0, 'Male': 1, 'Female': 0, 'M': 1, 'F': 0}
-        X['Sex'] = X['Sex'].map(sex_map).fillna(0).astype(int)
-    else:
-        X['Sex'] = X['Sex'].astype(int)
+    # Mapping Sex ke numerik (1: Male, 0: Female) - menangani berbagai format
+    sex_map = {'male': 1, 'Male': 1, 'M': 1, 'female': 0, 'Female': 0, 'F': 0}
+    X['Sex'] = X['Sex'].map(sex_map)
+    # Jika masih ada NaN (misal karena nilai lain), isi dengan 0 (default female)
+    X['Sex'] = X['Sex'].fillna(0).astype(int)
     
     # Normalisasi
     scaler = StandardScaler()
