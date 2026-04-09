@@ -763,47 +763,51 @@ elif menu == "🤖 AI Chatbot":
 
 elif menu == "📊 ML Predictor":
     st.markdown('<div class="main-header">📊 ML Calorie Burn Predictor</div>', unsafe_allow_html=True)
-    
-    st.info("This machine learning model predicts calories burned during exercise based on your workout parameters.")
-    
-    # Train/load model
-    try:
-        model, label_encoders = model, label_encoders, scaler = load_model()()
+    st.info("This ML model predicts calories burned during exercise.")
+
+    # Caching model agar hanya di-load sekali
+    @st.cache_resource
+    def load_cached_calorie_model():
+        from models import load_calorie_model, train_calorie_prediction_model
+        try:
+            model, encoders, scaler = load_calorie_model()
+            return model, encoders, scaler, None
+        except:
+            # Jika belum ada, latih dan simpan
+            model, encoders, mae, r2 = train_calorie_prediction_model()
+            return model, encoders, None, (mae, r2)
+
+    model, encoders, scaler, training_info = load_cached_calorie_model()
+    if training_info:
+        st.success(f"✅ Model trained! MAE: {training_info[0]:.2f} cal, R²: {training_info[1]:.3f}")
+    else:
         st.success("✅ Model loaded successfully!")
-    except:
-        st.info("Training model for the first time...")
-        model, label_encoders, mae, r2 = train_calorie_prediction_model()
-        st.success(f"✅ Model trained! MAE: {mae:.2f} calories, R²: {r2:.3f}")
-    
+
     st.markdown("---")
     st.subheader("Enter Workout Details")
-    
+
     col1, col2 = st.columns(2)
-    
     with col1:
         gender = st.selectbox("Gender", ["Male", "Female"])
-        age = st.number_input("Age", min_value=15, max_value=100, value=30)
-        height_cm = st.number_input("Height (cm)", min_value=100, max_value=250, value=170)
-        weight_kg = st.number_input("Weight (kg)", min_value=30, max_value=200, value=70)
-    
+        age = st.number_input("Age", 15, 100, 30)
+        height = st.number_input("Height (cm)", 100, 250, 170)
+        weight = st.number_input("Weight (kg)", 30, 200, 70)
     with col2:
-        duration_min = st.number_input("Workout Duration (minutes)", min_value=5, max_value=180, value=45)
-        heart_rate_bpm = st.number_input("Average Heart Rate (bpm)", min_value=60, max_value=200, value=140)
-        body_temp_c = st.number_input("Body Temperature (°C)", min_value=35.0, max_value=40.0, value=37.0, step=0.1)
-    
+        duration = st.number_input("Duration (min)", 5, 180, 45)
+        hr = st.number_input("Heart Rate (bpm)", 60, 200, 140)
+        temp = st.number_input("Body Temp (°C)", 35.0, 40.0, 37.0, 0.1)
+
     if st.button("🔮 Predict Calories Burned", use_container_width=True):
-        prediction = predict_calories_burned(
-            gender, age, height_cm, weight_kg, duration_min, heart_rate_bpm, body_temp_c
-        )
-        
-        st.markdown("---")
-        st.markdown(f"""
-        <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
-            <h2 style="color: white;">🔥 Predicted Calories Burned</h2>
-            <h1 style="color: white; font-size: 4rem;">{prediction:.0f} kcal</h1>
-            <p style="color: white;">for {duration_min} minutes of exercise</p>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.spinner("Predicting..."):
+            from models import predict_calories_burned
+            pred = predict_calories_burned(gender, age, height, weight, duration, hr, temp)
+            st.markdown(f"""
+            <div style="text-align:center; padding:2rem; background:linear-gradient(135deg,#4f46e5,#c084fc); border-radius:40px; color:white;">
+                <h2 style="color:white;">🔥 Predicted Calories Burned</h2>
+                <h1 style="font-size:4rem; margin:0;">{pred:.0f} kcal</h1>
+                <p>for {duration} minutes of exercise</p>
+            </div>
+            """, unsafe_allow_html=True)
 
 elif menu == "ℹ️ About":
     st.markdown('<div class="main-header">ℹ️ About This App</div>', unsafe_allow_html=True)
