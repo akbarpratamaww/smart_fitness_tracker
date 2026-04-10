@@ -194,11 +194,13 @@ def train_body_performance_model():
     
     models = {'random_forest': rf, 'xgboost': xgb_model, 'svm': svm}
     os.makedirs('models', exist_ok=True)
-    joblib.dump(models, BODY_MODEL_PATH)
-    joblib.dump(scaler, BODY_SCALER_PATH)
-    joblib.dump(target_encoder, BODY_TARGET_PATH)
-    joblib.dump(gender_map, BODY_GENDER_MAP_PATH)
-    joblib.dump(feature_order, BODY_FEATURE_ORDER_PATH)
+    # Di dalam models.py, pada fungsi train_body_performance_model
+    # Saat menyimpan models, tambahkan parameter compress=3
+    joblib.dump(models, BODY_MODEL_PATH, compress=3)
+    joblib.dump(scaler, BODY_SCALER_PATH, compress=3)
+    joblib.dump(target_encoder, BODY_TARGET_PATH, compress=3)
+    joblib.dump(gender_map, BODY_GENDER_MAP_PATH, compress=3)
+    joblib.dump(feature_order, BODY_FEATURE_ORDER_PATH, compress=3)
     
     return models, scaler, target_encoder, gender_map, (acc_rf, acc_xgb, acc_svm)
 
