@@ -55,7 +55,6 @@ class FitnessChatbot:
             # Add current user message
             messages.append({"role": "user", "content": user_message})
 
-            # Call Groq API with optimized parameters
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",  # or "gemma2-9b-it"
                 messages=messages,

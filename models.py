@@ -20,54 +20,55 @@ CAL_SCALER_PATH = 'models/calorie_scaler.pkl'
 CAL_FEATURE_ORDER_PATH = 'models/calorie_feature_order.pkl'
 
 def train_calorie_prediction_model():
-    print("🔄 Training calorie prediction model with Kaggle dataset...")
+    print("🔄 Training calorie prediction model (with compression)...")
     file_path = 'data/exercise_dataset.csv'
     if not os.path.exists(file_path):
-        raise FileNotFoundError(
-            f"Dataset {file_path} tidak ditemukan. "
-            "Pastikan file train.csv sudah diunduh dan dinamai exercise_dataset.csv di folder 'data/'."
-        )
+        raise FileNotFoundError("Dataset exercise_dataset.csv tidak ditemukan.")
     
     df = pd.read_csv(file_path)
-    print(f"✅ Dataset dimuat: {df.shape[0]} baris, {df.shape[1]} kolom")
+    print(f"Dataset asli: {len(df)} baris")
     
-    # Fitur input
-    feature_cols = ['Sex', 'Age', 'Height', 'Weight', 'Duration', 'Heart_Rate', 'Body_Temp']
-    missing_cols = [col for col in feature_cols if col not in df.columns]
-    if missing_cols:
-        raise KeyError(f"Kolom tidak ditemukan: {missing_cols}. Kolom yang ada: {df.columns.tolist()}")
+    # Sampling: gunakan 8.000 baris (cukup untuk akurasi baik)
+    n_samples = 60000
+    if len(df) > n_samples:
+        df = df.sample(n=n_samples, random_state=42)
+        print(f"✅ Menggunakan {n_samples} baris untuk training")
     
-    X = df[feature_cols].copy()
+    # Pastikan kolom yang diperlukan ada
+    required_cols = ['Sex', 'Age', 'Height', 'Weight', 'Duration', 'Heart_Rate', 'Body_Temp', 'Calories']
+    for col in required_cols:
+        if col not in df.columns:
+            raise KeyError(f"Kolom '{col}' tidak ditemukan.")
+    
+    X = df[['Sex', 'Age', 'Height', 'Weight', 'Duration', 'Heart_Rate', 'Body_Temp']].copy()
     y = df['Calories']
     
-    # Encode Sex
-    # Mapping Sex ke numerik (1: Male, 0: Female) - menangani berbagai format
+    # Mapping Sex ke numerik
     sex_map = {'male': 1, 'Male': 1, 'M': 1, 'female': 0, 'Female': 0, 'F': 0}
-    X['Sex'] = X['Sex'].map(sex_map)
-    # Jika masih ada NaN (misal karena nilai lain), isi dengan 0 (default female)
-    X['Sex'] = X['Sex'].fillna(0).astype(int)
+    X['Sex'] = X['Sex'].map(sex_map).fillna(0).astype(int)
     
-    # Normalisasi
+    # Standardisasi
     scaler = StandardScaler()
     numeric_cols = ['Age', 'Height', 'Weight', 'Duration', 'Heart_Rate', 'Body_Temp']
     X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
     
     feature_order = X.columns.tolist()
-    print(f"Fitur yang digunakan: {feature_order}")
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
     model = RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42, n_jobs=-1)
     model.fit(X_train, y_train)
     
     y_pred = model.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    print(f"✅ Model terlatih! MAE: {mae:.2f} kalori, R²: {r2:.3f}")
+    print(f"✅ Model terlatih! MAE: {mae:.2f}, R²: {r2:.3f}")
     
     os.makedirs('models', exist_ok=True)
-    joblib.dump(model, CAL_MODEL_PATH)
-    joblib.dump(scaler, CAL_SCALER_PATH)
-    joblib.dump(feature_order, CAL_FEATURE_ORDER_PATH)
+    # Simpan dengan kompresi
+    joblib.dump(model, CAL_MODEL_PATH, compress=3)
+    joblib.dump(scaler, CAL_SCALER_PATH, compress=3)
+    joblib.dump(feature_order, CAL_FEATURE_ORDER_PATH, compress=3)
     
     return model, None, mae, r2
 

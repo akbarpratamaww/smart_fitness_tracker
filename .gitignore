@@ -12,7 +12,7 @@ data/*.db
 data/*.sqlite
 
 # Model files
-models/*.pkl
+# models/*.pkl
 
 # IDE
 .vscode/
