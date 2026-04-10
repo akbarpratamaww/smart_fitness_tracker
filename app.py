@@ -431,32 +431,29 @@ elif menu == "🏃 Activity Log":
 
 elif menu == "🏋️ Fitness Level Classifier":
     st.markdown('<div class="main-header">🏋️ Klasifikasi Tingkat Kebugaran</div>', unsafe_allow_html=True)
-    
     st.markdown("""
     <div style="background: #f0f9ff; border-left: 4px solid #4f46e5; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
         Masukkan data fisik dan hasil tes kebugaran Anda. Sistem akan memprediksi tingkat kebugaran 
         menggunakan 3 algoritma Machine Learning: <strong>Random Forest, XGBoost, dan SVM</strong>.
     </div>
     """, unsafe_allow_html=True)
-    
-    # Load model (cached)
+
+    # Definisi fungsi dengan caching (indentasi rata kiri dalam blok ini)
     @st.cache_resource
-    def load_models():
+    def load_fitness_models():
+        from models import load_body_performance_model
         try:
-            from models import load_body_performance_model, train_body_performance_model
-            try:
-                models, encoders, scaler = load_body_performance_model()
-                return models, encoders, scaler, None
-            except:
-                models, encoders, scaler, target_encoder, _ = train_body_performance_model()
-                return models, encoders, scaler, None
+            models, scaler, target_encoder, gender_map, feature_order = load_body_performance_model()
+            return models, scaler, target_encoder, gender_map, feature_order
         except Exception as e:
             st.error(f"Gagal memuat model: {str(e)}")
-            return None, None, None, None
-    
-    models, encoders, scaler, target_encoder = load_models()
-    
+            return None, None, None, None, None
+
+    # Panggil fungsi
+    models, scaler, target_encoder, gender_map, feature_order = load_fitness_models()
+
     if models is not None:
+        # ... sisanya (form input, prediksi)
         col1, col2 = st.columns(2)
         
         with col1:
