@@ -679,6 +679,57 @@ elif menu == "🤖 AI Chatbot":
         }
         st.session_state.chatbot = FitnessChatbot(user_data)
     
+    # --- Greeting in Indonesian (only once) ---
+    if 'greeting_sent' not in st.session_state:
+        st.session_state.greeting_sent = False
+    
+    if not st.session_state.greeting_sent and len(st.session_state.messages) == 0:
+        from datetime import datetime
+        hour = datetime.now().hour
+        if hour < 12:
+            sapaan = "Selamat pagi 🌞"
+        elif hour < 18:
+            sapaan = "Selamat siang 🌤️"
+        else:
+            sapaan = "Selamat malam 🌙"
+        
+        nama = user['name'] if user['name'] else "Teman"
+        tujuan = user['fitness_goal']
+        if tujuan == "Weight Loss":
+            pesan_tujuan = "🎯 Ayo capai target penurunan berat badanmu! Aku akan membantu dengan defisit kalori yang sehat."
+        elif tujuan == "Muscle Gain":
+            pesan_tujuan = "💪 Siap membentuk otot? Aku akan memandumu dengan pola makan dan latihan yang tepat."
+        else:
+            pesan_tujuan = "🌟 Aku di sini untuk membantumu menjaga gaya hidup sehat dan seimbang."
+        
+        greeting = f"""{sapaan} **{nama}**! Senang berkenalan denganmu 👋
+
+Aku **FitBot**, asisten kebugaran dan nutrisi pribadimu.
+
+{pesan_tujuan}
+
+**Apa yang bisa aku bantu?**
+• 🍎 Menganalisis makanan & menghitung kalori
+• 🏋️ Menyusun rencana olahraga
+• 📊 Memantau progres harian
+• 💡 Memberi motivasi dan tips kesehatan
+
+**Coba tanyakan ini (dalam bahasa Inggris atau Indonesia):**
+- "How many calories should I eat today?"
+- "Give me a quick home workout"
+- "What's a healthy breakfast idea?"
+- "Aku butuh motivasi!"
+
+Aku akan merespon dalam bahasa yang kamu gunakan. Yuk mulai dengan mengetik pertanyaanmu di bawah! 😊"""
+        
+        st.session_state.messages.append({"role": "assistant", "content": greeting})
+        st.session_state.greeting_sent = True
+        try:
+            save_chat_message(user['user_id'], "[System Greeting]", greeting)
+        except:
+            pass
+        st.rerun()
+    
     # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -691,7 +742,7 @@ elif menu == "🤖 AI Chatbot":
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        # Get today's context (always defined)
+        # Get today's context
         calories_in, calories_out = get_today_summary(user['user_id'])
         context = {
             'calories_in': calories_in,
@@ -715,7 +766,7 @@ elif menu == "🤖 AI Chatbot":
         save_chat_message(user['user_id'], prompt, response)
         st.rerun()
     
-    # Quick questions sidebar - context must be defined inside each button click
+    # Quick questions sidebar (remain in English as before)
     with st.sidebar:
         st.markdown("### 💡 Quick Questions")
         st.markdown("Ask me anything:")
@@ -737,7 +788,7 @@ elif menu == "🤖 AI Chatbot":
                 with st.chat_message("user"):
                     st.markdown(q)
                 
-                # Define context inside the button action (important!)
+                # Define context inside the button action
                 calories_in, calories_out = get_today_summary(user['user_id'])
                 context = {
                     'calories_in': calories_in,
@@ -757,7 +808,7 @@ elif menu == "🤖 AI Chatbot":
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 save_chat_message(user['user_id'], q, response)
                 st.rerun()
-
+                
 elif menu == "📊 ML Predictor":
     st.markdown('<div class="main-header">📊 ML Calorie Burn Predictor</div>', unsafe_allow_html=True)
     st.info("This ML model predicts calories burned during exercise.")

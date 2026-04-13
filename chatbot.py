@@ -56,7 +56,7 @@ class FitnessChatbot:
             messages.append({"role": "user", "content": user_message})
 
             response = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # or "gemma2-9b-it"
+                model="llama-3.3-70b-versatile",  # or "gemma2-9b-it" "llama-3.1-8b-instant" "llama-3.3-70b-versatile"
                 messages=messages,
                 temperature=0.7,
                 max_tokens=400,
